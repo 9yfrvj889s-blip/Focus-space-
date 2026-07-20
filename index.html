@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مساحة التركيز | Focus Space</title>
+  <!-- خط Google Cairo المميز -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================
+       1. المتغيرات والـ Moods (الثيمات)
+       ========================================== */
+    :root {
+      /* Dynamic Theme Variables */
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --font-family: 'Cairo', sans-serif;
+    }
+
+    /* Mood: Nature (طبيعة) */
+    [data-mood="nature"] {
+      --bg-color: #1a2e26;
+      --card-bg: rgba(27, 48, 39, 0.75);
+      --accent-color: #4ade80;
+      --accent-hover: #22c55e;
+      --text-main: #f0fdf4;
+      --text-muted: #86efac;
+      --border-color: rgba(74, 222, 128, 0.15);
+    }
+
+    /* Mood: RGB / Cyberpunk */
+    [data-mood="rgb"] {
+      --bg-color: #09090b;
+      --card-bg: rgba(24, 24, 27, 0.85);
+      --accent-color: #f43f5e;
+      --accent-hover: #e11d48;
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --border-color: #f43f5e;
+      --shadow: 0 0 15px rgba(244, 63, 94, 0.3);
+    }
+
+    /* Mood: Warm Lo-Fi (على ذوقي) */
+    [data-mood="lofi"] {
+      --bg-color: #2d1b2d;
+      --card-bg: rgba(67, 40, 67, 0.7);
+      --accent-color: #fb923c;
+      --accent-hover: #f97316;
+      --text-main: #fff7ed;
+      --text-muted: #fdba74;
+      --border-color: rgba(251, 146, 60, 0.2);
+    }
+
+    /* ==========================================
+       2. التنسيقات العامة 
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* ==========================================
+       3. شاشة تسجيل الدخول
+       ========================================== */
+    .login-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .login-container p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+      text-align: right;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-color);
+      color: #000;
+      font-weight: 700;
+      font-family: var(--font-family);
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+
+    /* ==========================================
+       4. الواجهة الرئيسية والتطبيق
+       ========================================== */
+    .app-container {
+      display: none;
+      width: 90%;
+      max-width: 1000px;
+      margin: 2rem auto;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Top Bar Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      border-radius: 15px;
+      border: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .user-welcome h3 {
+      font-size: 1.2rem;
+    }
+
+    /* Mood Selector Dropdown/Buttons */
+    .mood-selector {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .mood-btn {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: 0.85rem;
+    }
+
+    .mood-btn.active {
+      background: var(--accent-color);
+      color: #000;
+      font-weight: bold;
+    }
+
+    /* Grid for Services */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* الخدمة 1: المؤقت Pomodoro */
+    .timer-display {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+      letter-spacing: 2px;
+    }
+
+    .timer-modes {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .timer-btn-mode {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .timer-btn-mode.active {
+      color: var(--accent-color);
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 0.8rem;
+      width: 100%;
+    }
+
+    .btn-timer {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.2);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-timer.primary {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    /* الخدمة 2: أصوات الراحة Ambient Sounds */
+    .sounds-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .sound-item {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .sound-item.playing {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+
+    .sound-item span {
+      font-size: 1.5rem;
+    }
+
+    .sound-item p {
+      font-size: 0.85rem;
+    }
+
+    /* الخدمة 3: الـ Streak */
+    .streak-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .streak-fire {
+      font-size: 4rem;
+      margin-bottom: 0.5rem;
+      animation: pulse 2s infinite alternate;
+    }
+
+    .streak-count {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .streak-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* إعلانات هادئة (Placeholder) */
+    .ad-banner {
+      width: 100%;
+      background: rgba(0,0,0,0.15);
+      border: 1px dashed var(--border-color);
+      padding: 0.8rem;
+      border-radius: 10px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       1. شاشة تسجيل الدخول
+       ========================================== -->
+  <div class="login-container" id="loginScreen">
+    <h2>مرحباً بك 🎓</h2>
+    <p>سجّل دخولك للبدء في جلسات الدراسة والتركيز</p>
+    <form id="loginForm">
+      <div class="input-group">
+        <label>الاسم أو اللقب:</label>
+        <input type="text" id="usernameInput" placeholder="أدخل اسمك هنا..." required>
+      </div>
+      <div class="input-group">
+        <label>البريد الإلكتروني:</label>
+        <input type="email" id="emailInput" placeholder="name@example.com" required>
+      </div>
+      <button type="submit" class="btn-primary">دخول إلى واجهة التركيز ←</button>
+    </form>
+  </div>
+
+  <!-- ==========================================
+       2. الواجهة الرئيسية للتطبيق
+       ========================================== -->
+  <div class="app-container" id="appScreen">
+    
+    <!-- Top Header -->
+    <header>
+      <div class="user-welcome">
+        <h3 id="welcomeMsg">مرحباً بك!</h3>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">جاهز للإنجاز اليوم؟</span>
+      </div>
+      
+      <!-- اختيار الـ Mood -->
+      <div class="mood-selector">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">المود:</span>
+        <button class="mood-btn active" onclick="setMood('lofi')">☕ Lo-Fi</button>
+        <button class="mood-btn" onclick="setMood('nature')">🌿 Nature</button>
+        <button class="mood-btn" onclick="setMood('rgb')">⚡ RGB</button>
+      </div>
+    </header>
+
+    <!-- إعلان هادئ في الأعلى -->
+    <div class="ad-banner">
+      مساحة إعلانية هادئة | دعمك يساعدنا على إبقاء الموقع مجانياً بالكامل ❤️
+    </div>
+
+    <!-- الخدمات الثلاث -->
+    <div class="services-grid">
+      
+      <!-- الخدمة الأولى: المؤقت Pomodoro -->
+      <div class="card">
+        <div class="card-title">⏱️ مؤقت التركيز</div>
+        <div class="timer-modes">
+          <button class="timer-btn-mode active" onclick="setTimerMode('work')">دراسة (25د)</button>
+          <button class="timer-btn-mode" onclick="setTimerMode('shortBreak')">راحة (5د)</button>
+          <button class="timer-btn-mode" onclick="setTimerMode('longBreak')">راحة طويلة (15د)</button>
+        </div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-controls">
+          <button class="btn-timer primary" id="startBtn" onclick="toggleTimer()">بدء</button>
+          <button class="btn-timer" onclick="resetTimer()">إعادة ضبط</button>
+        </div>
+      </div>
+
+      <!-- الخدمة الثانية: أصوات مريحة -->
+      <div class="card">
+        <div class="card-title">🎧 أصوات الخلفية</div>
+        <div class="sounds-list">
+          <div class="sound-item" id="sound-rain" onclick="toggleSound('rain')">
+            <span>🌧️</span>
+            <p>صوت المطر</p>
+          </div>
+          <div class="sound-item" id="sound-waves" onclick="toggleSound('waves')">
+            <span>🌊</span>
+            <p>أمواج البحر</p>
+          </div>
+          <div class="sound-item" id="sound-fire" onclick="toggleSound('fire')">
+            <span>🔥</span>
+            <p>خشب دافئ</p>
+          </div>
+          <div class="sound-item" id="sound-cafe" onclick="toggleSound('cafe')">
+            <span>☕</span>
+            <p>ضوضاء مقهى</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- الخدمة الثالثة: Streak الحماس -->
+      <div class="card">
+        <div class="card-title">🔥 حماس الـ Streak</div>
+        <div class="streak-box">
+          <div class="streak-fire">🔥</div>
+          <div class="streak-count" id="streakCount">1</div>
+          <p class="streak-desc">أيام التزام متتالية! استمر في العودة يومياً.</p>
+          <button class="mood-btn" style="margin-top: 1rem;" onclick="incrementStreakManual()">+ زيادة الستريك لتجربته</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- إعلان هادئ في الأسفل -->
+    <div class="ad-banner">
+      إعلان هادئ ثانٍ | Focus Space 2026
+    </div>
+
+  </div>
+
+  <!-- عناصر الصوت (عبر شبكة شائعة ومباشرة) -->
+  <audio id="audio-rain" loop src="https://assets.mixkit.co/active_storage/sfx/2515/2515-preview.mp3"></audio>
+  <audio id="audio-waves" loop src="https://assets.mixkit.co/active_storage/sfx/1189/1189-preview.mp3"></audio>
+  <audio id="audio-fire" loop src="https://assets.mixkit.co/active_storage/sfx/2670/2670-preview.mp3"></audio>
+  <audio id="audio-cafe" loop src="https://assets.mixkit.co/active_storage/sfx/332/332-preview.mp3"></audio>
+
+  <!-- ==========================================
+       5. كود البرمجة والتفاعل (JavaScript)
+       ========================================== -->
+  <script>
+    /* ------------------------------------------
+       تسجيل الدخول وإدارة المستخدم
+       ------------------------------------------ */
+    const loginForm = document.getElementById('loginForm');
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    const welcomeMsg = document.getElementById('welcomeMsg');
+
+    // التأكد من تسجيل الدخول السابق
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('focus_username');
+      if (savedUser) {
+        showAppScreen(savedUser);
+      }
+      checkStreak();
+    });
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('usernameInput').value;
+      localStorage.setItem('focus_username', username);
+      showAppScreen(username);
+    });
+
+    function showAppScreen(name) {
+      loginScreen.style.display = 'none';
+      appScreen.style.display = 'flex';
+      welcomeMsg.textContent = `مرحباً، ${name} 👋`;
+    }
+
+    /* ------------------------------------------
+       تغيير الـ Moods (الثيمات)
+       ------------------------------------------ */
+    function setMood(moodName) {
+      document.documentElement.setAttribute('data-mood', moodName);
+      
+      // تحديث زر الـ active
+      const buttons = document.querySelectorAll('.mood-btn');
+      buttons.forEach(btn => {
+        if(btn.textContent.toLowerCase().includes(moodName)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    /* ------------------------------------------
+       الخدمة 1: نظام المؤقت (Pomodoro)
+       ------------------------------------------ */
+    let timerInterval = null;
+    let totalSeconds = 25 * 60;
+    let isRunning = false;
+    let currentMode = 'work';
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const startBtn = document.getElementById('startBtn');
+
+    function updateDisplay() {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function toggleTimer() {
+      if (isRunning) {
+        clearInterval(timerInterval);
+        startBtn.textContent = 'استئناف';
+        isRunning = false;
+      } else {
+        isRunning = true;
+        startBtn.textContent = 'إيقاف مؤقت';
+        timerInterval = setInterval(() => {
+          if (totalSeconds > 0) {
+            totalSeconds--;
+            updateDisplay();
+          } else {
+            clearInterval(timerInterval);
+            alert('انتهى الوقت! خذ قسطاً من الراحة أو ابدأ جولة جديدة.');
+            resetTimer();
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isRunning = false;
+      startBtn.textContent = 'بدء';
+      if (currentMode === 'work') totalSeconds = 25 * 60;
+      else if (currentMode === 'shortBreak') totalSeconds = 5 * 60;
+      else if (currentMode === 'longBreak') totalSeconds = 15 * 60;
+      updateDisplay();
+    }
+
+    function setTimerMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.timer-btn-mode').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      resetTimer();
+    }
+
+    /* ------------------------------------------
+       الخدمة 2: أصوات الراحة
+       ------------------------------------------ */
+    const activeAudios = {};
+
+    function toggleSound(soundName) {
+      const audio = document.getElementById(`audio-${soundName}`);
+      const soundCard = document.getElementById(`sound-${soundName}`);
+
+      if (audio.paused) {
+        audio.play();
+        soundCard.classList.add('playing');
+      } else {
+        audio.pause();
+        soundCard.classList.remove('playing');
+      }
+    }
+
+    /* ------------------------------------------
+       الخدمة 3: نظام الـ Streak
+       ------------------------------------------ */
+    function checkStreak() {
+      let streak = parseInt(localStorage.getItem('focus_streak')) || 1;
+      const lastVisit = localStorage.getItem('focus_last_visit');
+      const today = new Date().toDateString();
+
+      if (lastVisit) {
+        const lastDate = new Date(lastVisit);
+        const currentDate = new Date(today);
+        const diffTime = Math.abs(currentDate - lastDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          // زار الموقع في اليوم التالي مباشرة
+          streak += 1;
+          localStorage.setItem('focus_streak', streak);
+        } else if (diffDays > 1) {
+          // انقطع لأكثر من يوم -> يرجع للصفر/واحد
+          streak = 1;
+          localStorage.setItem('focus_streak', streak);
+        }
+      }
+
+      localStorage.setItem('focus_last_visit', today);
+      document.getElementById('streakCount').textContent = streak;
+    }
+
+    function incrementStreakManual() {
+      let streak = parseInt(localStorage.getItem('focus_streak')) || 1;
+      streak++;
+      localStorage.setItem('focus_streak', streak);
+      document.getElementById('streakCount').textContent = streak;
+    }
+  </script>
+</body>
+</html>
